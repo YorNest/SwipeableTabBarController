@@ -78,11 +78,9 @@ open class SwipeableTabBarController: UITabBarController {
         }
     }
     
-    /// Called when user cancelled his gesture for whatever reason. Parameter represents the currently selected index (for some reason selectedIndex is wrong in this one).
-    open var didCancel: ((Int) -> Void)?
+    /// Called when user finished his gesture. Parameter represents the currently selected index.
+    open var didFinish: ((Int) -> Void)?
     
-    private var previousSelectedIndex: Int = .zero
-
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         setup()
@@ -94,7 +92,6 @@ open class SwipeableTabBarController: UITabBarController {
     }
 
     private func setup() {
-        previousSelectedIndex = selectedIndex
         currentAnimatedTransitioningType = tapAnimatedTransitioning
         // UITabBarControllerDelegate for transitions.
         delegate = self
@@ -129,21 +126,17 @@ open class SwipeableTabBarController: UITabBarController {
         
         if translation.x > 0.0 && selectedIndex > 0 {
             // Panning right, transition to the left view controller.
-            previousSelectedIndex = selectedIndex
             selectedIndex -= 1
         } else if translation.x < 0.0 && selectedIndex + 1 < viewControllers?.count ?? 0 {
             // Panning left, transition to the right view controller.
-            previousSelectedIndex = selectedIndex
             selectedIndex += 1
         } else if isCyclingEnabled && translation.x > 0.0 && selectedIndex == 0 {
             // Panning right at first view controller, transition to the last view controller.
             if let count = viewControllers?.count, count >= 2 {
-                previousSelectedIndex = selectedIndex
                 selectedIndex = count - 1
             }
         } else if isCyclingEnabled && translation.x < 0.0 && selectedIndex + 1 == viewControllers?.count ?? 0 {
             // Panning left at last view controller, transition to the first view controller
-            previousSelectedIndex = selectedIndex
             selectedIndex = 0
         } else {
             // Don't reset the gesture recognizer if we skipped starting the
@@ -214,9 +207,9 @@ extension SwipeableTabBarController: UITabBarControllerDelegate {
         guard let panGesture = panGestureRecognizer else { return nil }
         if panGesture.state == .began || panGesture.state == .changed {
             let interactor = SwipeInteractor(gestureRecognizer: panGesture, edge: currentAnimatedTransitioningType?.targetEdge ?? .right)
-            interactor.didCancel = { [weak self] in
+            interactor.didFinish = { [weak self] in
                 guard let strongSelf = self else { return }
-                strongSelf.didCancel?(strongSelf.previousSelectedIndex)
+                strongSelf.didFinish?(strongSelf.selectedIndex)
             }
             return interactor
         } else {

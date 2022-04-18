@@ -14,7 +14,7 @@ class SwipeInteractor: UIPercentDrivenInteractiveTransition {
     
     // MARK: - Internal
     
-    var didCancel: (() -> Void)?
+    var didFinish: (() -> Void)?
     
     // MARK: - Private
     private weak var transitionContext: UIViewControllerContextTransitioning?
@@ -85,7 +85,6 @@ class SwipeInteractor: UIPercentDrivenInteractiveTransition {
             // position.
             if percentForGesture(gestureRecognizer) < 0.0 {
                 cancel()
-                didCancel?()
                 // Need to remove our action from the gesture recognizer to
                 // ensure it will not be called again before deallocation.
                 gestureRecognizer.removeTarget(self, action: #selector(gestureRecognizeDidUpdate(_:)))
@@ -108,13 +107,12 @@ class SwipeInteractor: UIPercentDrivenInteractiveTransition {
 
             if shouldComplete {
                 finish()
+                didFinish?()
             } else {
                 cancel()
-                didCancel?()
             }
         default:
             cancel()
-            didCancel?()
         }
     }
 }
