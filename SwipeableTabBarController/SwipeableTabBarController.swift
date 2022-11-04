@@ -207,9 +207,14 @@ extension SwipeableTabBarController: UITabBarControllerDelegate {
         guard let panGesture = panGestureRecognizer else { return nil }
         if panGesture.state == .began || panGesture.state == .changed {
             let interactor = SwipeInteractor(gestureRecognizer: panGesture, edge: currentAnimatedTransitioningType?.targetEdge ?? .right)
+            interactor.selectedIndex = selectedIndex
             interactor.didFinish = { [weak self] in
                 guard let strongSelf = self else { return }
                 strongSelf.didFinish?(strongSelf.selectedIndex)
+            }
+            interactor.didCancel = { [weak self] oldIndex in
+                guard let strongSelf = self else { return }
+                strongSelf.didFinish?(oldIndex)
             }
             return interactor
         } else {
